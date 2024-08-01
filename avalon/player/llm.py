@@ -61,6 +61,7 @@ class LLMPlayer(BasePlayer):
             'events': format_events(self.logger.get_player_events(self)),
             'player_names': self.game.format_player_list(team)
         })
+        self.logger.log_admin(f'Vote: {response["vote"]}')
         self.logger.log_admin(f'True explanation: {response["true_explanation"]}')
         self.logger.log_admin(f'Public explanation: {response["public_explanation"]}')
         return response['vote']
@@ -72,6 +73,7 @@ class LLMPlayer(BasePlayer):
             'allegiance': self.allegiance,
             'events': format_events(self.logger.get_player_events(self)),
         })
+        self.logger.log_admin(f'Vote: {response["vote"]}')
         self.logger.log_admin(f'True explanation: {response["true_explanation"]}')
         self.logger.log_admin(f'Public explanation: {response["public_explanation"]}')
         success = bool(response['vote'])

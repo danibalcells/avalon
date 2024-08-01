@@ -13,3 +13,5 @@ Respond with a JSON with these fields:
 - "public_explanation" a string explaining why you chose this action to the players.
 The true and public explanations might be the same or different: depending on your role and strategy,
 you may or may not want to reveal the true explanation to the players.
+
+Respond in valid JSON and nothing else.
