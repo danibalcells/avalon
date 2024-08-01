@@ -17,6 +17,7 @@ class Game:
         self.players = self.create_players(player_classes)
         self.quests = []
         self.current_quest = 0
+        self.evil_players = []
         self.players_per_quest = [2, 3, 3, 4, 4]
         self.fails_required = [1, 1, 1, 2, 1]
 
@@ -31,7 +32,13 @@ class Game:
         random.shuffle(roles)
         for i, player in enumerate(self.players):
             player.assign_role(roles[i])
+            if not player.is_loyal:
+                self.evil_players.append(player)
             logging.info(f"Assigned role {roles[i]} to {player}")
+
+    def reveal_evil_players(self):
+        for player in self.evil_players:
+            player.known_evil_players = self.evil_players
 
     def assign_first_leader(self) -> int:
         leader_index = random.randint(0, len(self.players) - 1)
@@ -57,6 +64,7 @@ class Game:
 
     def play_game(self) -> str:
         self.assign_roles()
+        self.reveal_evil_players()
         leader_index = self.assign_first_leader()
         self.rejected_teams = 0
 
