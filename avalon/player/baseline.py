@@ -1,46 +1,23 @@
 import random
-import logging
 from typing import List, TypeVar
+from avalon.player.base import BasePlayer
 
 PlayerType = TypeVar('PlayerType', bound='BasePlayer')
-
-class BasePlayer:
-    def __init__(self, name: str, game: 'Game'):
-        self.name = name
-        self.game = game
-        self.logger = game.logger
-        self.known_evil_players = []
-
-    def __str__(self):
-        return f'{self.__class__.__name__} {self.name} ({"Loyal" if self.is_loyal else "Evil"})'
-
-    def assign_role(self, role: str):
-        self.role = role
-        self.is_loyal = role in ["Merlin", "Loyal Servant"]
-
-    def propose_team(self) -> List[PlayerType]:
-        raise NotImplementedError
-
-    def vote_on_team(self, team: List[PlayerType]) -> bool:
-        raise NotImplementedError
-
-    def conduct_quest(self, team: List[PlayerType]) -> bool:
-        raise NotImplementedError
 
 class RandomPlayer(BasePlayer):
     def propose_team(self, num_players: int) -> List[PlayerType]:
         team = random.sample(self.game.players, num_players)
-        self.logger.log(f"{self} proposed team: {[str(player) for player in team]}")
+        self.logger.log_admin(f"{self} proposed team: {[str(player) for player in team]}")
         return team
         
     def vote_on_team(self, team: List[PlayerType]) -> bool:
         vote = random.choice([True, False])
-        self.logger.log(f"{self} voted {'Yes' if vote else 'No'}")
+        self.logger.log_admin(f"{self} voted {'Yes' if vote else 'No'}")
         return vote
     
     def conduct_quest(self, team: List[PlayerType]) -> bool:
         success = random.choice([True, False])
-        self.logger.log(f"{self} {'succeeded' if success else 'failed'} the quest")
+        self.logger.log_admin(f"{self} {'succeeded' if success else 'failed'} the quest")
         return success
 
 
@@ -49,7 +26,6 @@ class NaivePlayer(BasePlayer):
         # Includes self in the team
         available_players = [player for player in self.game.players if player != self]
         team = [self] + random.sample(available_players, num_players - 1)
-        self.logger.log(f"{self} proposed team: {[str(player) for player in team]}")
         return team
 
     def vote_on_team(self, team: List[PlayerType]) -> bool:
@@ -75,6 +51,6 @@ class NaivePlayer(BasePlayer):
             success = True
         else:
             success = random.choice([True, False])
-        self.logger.log(f"{self} {'succeeded' if success else 'failed'} the quest")
+        self.logger.log_admin(f"{self} {'succeeded' if success else 'failed'} the quest")
         return success
 

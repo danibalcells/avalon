@@ -2,8 +2,7 @@ from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
 from typing import List, TypeVar
 import logging
-import random
-from .base import BasePlayer
+from avalon.player.base import BasePlayer
 
 PlayerType = TypeVar('PlayerType', bound='BasePlayer')
 
@@ -16,7 +15,7 @@ class LLMPlayer(BasePlayer):
         # Initialize your LLMChain here
         prompt_template = PromptTemplate(
             input_variables=["prompt"],
-            template="You are playing a game of Avalon. {prompt}"
+            template="You are playing a game of Avalon. Your name is {self.name}. {prompt}"
         )
         llm_chain = LLMChain(prompt_template=prompt_template)
         return llm_chain
