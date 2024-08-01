@@ -1,0 +1,12 @@
+It is now your turn to propose a team of {n_players_in_quest} to go on quest number {n_quest}.
+This is attempt number {attempt} out of 5 to propose a team.
+If players reject the fifth attempt to form a team for this quest, the Evil team will win the game.
+The players' IDs and names are:
+{player_names}
+Think, based on your role, of what action you can take to increase your likelihood of your team winning the game.
+Respond with a JSON with these fields: 
+- "player_ids": a list with the integer IDs of the chosen players
+- "true_explanation" a string explaining why you chose this team.
+- "public_explanation" a string explaining why you chose this team to the players.
+The true and public explanations might be the same or different: depending on your role and strategy,
+you may or may not want to reveal the true explanation to the players.

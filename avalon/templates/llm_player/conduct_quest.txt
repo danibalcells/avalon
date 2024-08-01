@@ -1,0 +1,15 @@
+It is now your turn to conduct the quest.
+
+If you are Loyal, you must play Success.
+If you are Evil, you may play either Success or Fail, depending on your strategy.
+
+Your vote will be cast secretly and shuffled with the votes of the other players.
+All votes will then be revealed to the players.
+
+Think, based on your role, of what action you can take to increase your likelihood of your team winning the game.
+Respond with a JSON with these fields: 
+- "vote": 1 for Success, 0 for Fail
+- "true_explanation" a string explaining why you chose this action.
+- "public_explanation" a string explaining why you chose this action to the players.
+The true and public explanations might be the same or different: depending on your role and strategy,
+you may or may not want to reveal the true explanation to the players.

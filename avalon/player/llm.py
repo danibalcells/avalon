@@ -1,43 +1,79 @@
-from langchain.chains import LLMChain
-from langchain.prompts import PromptTemplate
 from typing import List, TypeVar
 import logging
+
+from langchain_openai import OpenAI
+from langchain.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import JsonOutputParser
+
 from avalon.player.base import BasePlayer
+from avalon.logger import format_events
 
 PlayerType = TypeVar('PlayerType', bound='BasePlayer')
+DEF_PROMPT_PATH = 'avalon/templates/llm_player'
 
 class LLMPlayer(BasePlayer):
-    def __init__(self, name: str, game: 'Game'):
-        super().__init__(name, game)
-        self.llm_chain = self.create_llm_chain()
+    def __init__(self, name: str, player_id: int, game: 'Game', prompt_path: str = DEF_PROMPT_PATH):
+        super().__init__(name, player_id, game)
+        self.load_prompts(prompt_path)
+        self.create_llm_chains()
 
-    def create_llm_chain(self) -> LLMChain:
-        # Initialize your LLMChain here
-        prompt_template = PromptTemplate(
-            input_variables=["prompt"],
-            template="You are playing a game of Avalon. Your name is {self.name}. {prompt}"
-        )
-        llm_chain = LLMChain(prompt_template=prompt_template)
-        return llm_chain
+    def load_prompts(self, prompt_path: str):
+        with open(prompt_path + '/base.txt') as f:
+            base_prompt_str = f.read()
+        with open(prompt_path + '/choose_team.txt') as f:
+            choose_team_prompt_str = f.read()
+            self.choose_team_prompt_template = ChatPromptTemplate.from_template(base_prompt_str + 
+                                                                                choose_team_prompt_str)
+        with open(prompt_path + '/vote_team.txt') as f:
+            vote_team_prompt_str = f.read()
+            self.vote_team_prompt_template = ChatPromptTemplate.from_template(base_prompt_str + 
+                                                                                vote_team_prompt_str)
+        with open(prompt_path + '/conduct_quest.txt') as f:
+            conduct_quest_prompt_str = f.read()
+            self.conduct_quest_prompt_template = ChatPromptTemplate.from_template(base_prompt_str + 
+                                                                                conduct_quest_prompt_str)
+    def create_llm_chains(self):
+        self.llm = OpenAI()
+        self.choose_team_chain = self.choose_team_prompt_template | self.llm | JsonOutputParser()
+        self.vote_team_chain = self.vote_team_prompt_template | self.llm | JsonOutputParser()
+        self.conduct_quest_chain = self.conduct_quest_prompt_template | self.llm | JsonOutputParser()
 
     def propose_team(self, num_players: int) -> List[PlayerType]:
-        prompt = f"Propose a team of {num_players} players for the quest. Here are the players: {[player.name for player in self.game.players]}"
-        response = self.llm_chain.run(prompt)
-        team_names = response.split(", ")
-        team = [player for player in self.game.players if player.name in team_names]
-        logging.info(f"{self} proposed team: {[str(player) for player in team]}")
-        return team
+        response = self.choose_team_chain.invoke({
+            'player_name': self.name,
+            'role': self.role,
+            'allegiance': self.allegiance,
+            'events': format_events(self.logger.get_player_events(self)),
+            'n_players_in_quest': num_players,
+            'n_quest': self.game.current_quest + 1,
+            'attempt': self.game.rejected_teams + 1,
+            'player_names': self.game.format_player_list()
+        })
+        self.logger.log_admin(f'True explanation: {response["true_explanation"]}')
+        self.logger.log_admin(f'Public explanation: {response["public_explanation"]}')
+        return self.game.get_players_by_ids(response['player_ids'])
 
     def vote_on_team(self, team: List[PlayerType]) -> bool:
-        prompt = f"Vote on the proposed team: {[player.name for player in team]}. Here are the previous votes: {self.game.vote_history}"
-        response = self.llm_chain.run(prompt)
-        vote = response.strip().lower() == 'yes'
-        logging.info(f"{self} voted {'Yes' if vote else 'No'}")
-        return vote
+        response = self.vote_team_chain.invoke({
+            'player_name': self.name,
+            'role': self.role,
+            'allegiance': self.allegiance,
+            'events': format_events(self.logger.get_player_events(self)),
+            'player_names': self.game.format_player_list(team)
+        })
+        self.logger.log_admin(f'True explanation: {response["true_explanation"]}')
+        self.logger.log_admin(f'Public explanation: {response["public_explanation"]}')
+        return response['vote']
 
     def conduct_quest(self, team: List[PlayerType]) -> bool:
-        prompt = f"Conduct the quest with the team: {[player.name for player in team]}. You are {'Loyal' if self.is_loyal else 'Evil'}."
-        response = self.llm_chain.run(prompt)
-        success = response.strip().lower() == 'success'
-        logging.info(f"{self} {'succeeded' if success else 'failed'} the quest")
+        response = self.conduct_quest_chain.invoke({
+            'player_name': self.name,
+            'role': self.role,
+            'allegiance': self.allegiance,
+            'events': format_events(self.logger.get_player_events(self)),
+        })
+        self.logger.log_admin(f'True explanation: {response["true_explanation"]}')
+        self.logger.log_admin(f'Public explanation: {response["public_explanation"]}')
+        success = bool(response['vote'])
+        self.logger.log_admin(f"{self} {'succeeded' if success else 'failed'} the quest")
         return success

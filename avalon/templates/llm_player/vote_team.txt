@@ -1,0 +1,11 @@
+It is now your turn to vote on the proposed team.
+The IDs and names of the proposed team are:
+{player_names}
+
+Think, based on your role, of what action you can take to increase your likelihood of your team winning the game.
+Respond with a JSON with these fields: 
+- "vote": 1 to approve, 0 to reject
+- "true_explanation" a string explaining why you chose this action.
+- "public_explanation" a string explaining why you chose this action to the players.
+The true and public explanations might be the same or different: depending on your role and strategy,
+you may or may not want to reveal the true explanation to the players.

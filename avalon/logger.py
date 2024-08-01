@@ -1,7 +1,9 @@
 from dataclasses import dataclass
 import logging
-from typing import List, Dict
+from typing import List, TypeVar
 from enum import Enum
+
+PlayerType = TypeVar('PlayerType', bound='BasePlayer')
 
 @dataclass
 class EventVisibility(Enum):
@@ -13,6 +15,9 @@ class EventVisibility(Enum):
 class Event():
     message: str
     visibility: EventVisibility
+
+def format_events(events: List[Event]):
+    return '\n'.join([e.message for e in events])
 
 class GameLogger:
     def __init__(self):
@@ -48,3 +53,9 @@ class GameLogger:
     def get_admin_events(self) -> List[Event]:
         allowed_visibilities = [EventVisibility.PUBLIC.value, EventVisibility.EVIL.value, EventVisibility.ADMIN.value]
         return self.get_events_filtered(allowed_visibilities)
+
+    def get_player_events(self, player: PlayerType) -> List[Event]:
+        if player.allegiance == 'Evil':
+            return self.get_evil_events()
+        else:
+            return self.get_public_events()

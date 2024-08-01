@@ -6,7 +6,7 @@ PlayerType = TypeVar('PlayerType', bound='BasePlayer')
 
 class RandomPlayer(BasePlayer):
     def propose_team(self, num_players: int) -> List[PlayerType]:
-        team = random.sample(self.game.players, num_players)
+        team = random.sample(self.game.list_players(), num_players)
         self.logger.log_admin(f"{self} proposed team: {[str(player) for player in team]}")
         return team
         
@@ -24,7 +24,7 @@ class RandomPlayer(BasePlayer):
 class NaivePlayer(BasePlayer):
     def propose_team(self, num_players: int) -> List[PlayerType]:
         # Includes self in the team
-        available_players = [player for player in self.game.players if player != self]
+        available_players = [player for player in self.game.list_players() if player != self]
         team = [self] + random.sample(available_players, num_players - 1)
         return team
 
@@ -42,7 +42,7 @@ class NaivePlayer(BasePlayer):
                 vote = True
             else:
                 vote = False
-        self.logger.log(f"{self} voted {'Yes' if vote else 'No'}")
+        self.logger.log_admin(f"{self} voted {'Yes' if vote else 'No'}")
         return vote
 
     def conduct_quest(self, team: List[PlayerType]) -> bool:
