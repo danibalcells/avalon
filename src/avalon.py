@@ -3,16 +3,12 @@ from typing import List, Type
 import random
 from datetime import datetime
 from .player.base import BasePlayer, NaivePlayer, RandomPlayer
-
-# Configure logging
-logging.basicConfig(
-                    level=logging.DEBUG,
-                    # filename=f'logs/avalon_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.log',
-                    format='%(asctime)s - %(levelname)s - %(message)s')
+from .logger import GameLogger
 
 
 class Game:
     def __init__(self, player_classes: List[Type[BasePlayer]]):
+        self.logger = GameLogger()
         self.num_players = 7
         self.players = self.create_players(player_classes)
         self.quests = []
@@ -34,7 +30,7 @@ class Game:
             player.assign_role(roles[i])
             if not player.is_loyal:
                 self.evil_players.append(player)
-            logging.info(f"Assigned role {roles[i]} to {player}")
+            self.logger.log(f"Assigned role {roles[i]} to {player}")
 
     def reveal_evil_players(self):
         for player in self.evil_players:
@@ -42,7 +38,7 @@ class Game:
 
     def assign_first_leader(self) -> int:
         leader_index = random.randint(0, len(self.players) - 1)
-        logging.info(f"Assigned first leader {self.players[leader_index]}")
+        self.logger.log(f"Assigned first leader {self.players[leader_index]}")
         return leader_index
 
     def select_quest_team(self) -> List[BasePlayer]:
@@ -51,15 +47,15 @@ class Game:
     def vote_on_team(self, team: List[BasePlayer]) -> bool:
         votes = [player.vote_on_team(team) for player in self.players]
         result = votes.count(True) > votes.count(False)
-        logging.info(f"Team {self.rejected_teams+1} vote result: {'Approved' if result else 'Rejected'}")
+        self.logger.log(f"Team {self.rejected_teams+1} vote result: {'Approved' if result else 'Rejected'}")
         return result
 
     def conduct_quest(self, team: List[BasePlayer]) -> bool:
         votes = [player.conduct_quest(team) for player in team]
         n_fails = votes.count(False)
         result = n_fails < self.current_quest_fails_required
-        logging.info(f'Quest votes: {votes}')
-        logging.info(f"Quest {self.current_quest+1} result: {'Success' if result else 'Failure'}")
+        self.logger.log(f'Quest votes: {votes}')
+        self.logger.log(f"Quest {self.current_quest+1} result: {'Success' if result else 'Failure'}")
         return result
 
     def play_game(self) -> str:
@@ -69,14 +65,14 @@ class Game:
         self.rejected_teams = 0
 
         for quest in range(5):
-            logging.info(f"Starting quest {quest+1}")
+            self.logger.log(f"Starting quest {quest+1}")
             self.current_quest = quest
             self.current_quest_fails_required = self.fails_required[quest]
             num_players = self.players_per_quest[quest]
             is_team_accepted = False
 
             while not is_team_accepted:
-                logging.info(f'Proposing team {self.rejected_teams+1}')
+                self.logger.log(f'Proposing team {self.rejected_teams+1}')
                 proposer = self.players[leader_index]
                 team = proposer.propose_team(num_players)
                 if self.vote_on_team(team):
@@ -89,15 +85,15 @@ class Game:
                 else:
                     self.rejected_teams += 1
                     if self.rejected_teams >= 5:
-                        logging.info("Five teams rejected in a row. Evil team wins.")
+                        self.logger.log("Five teams rejected in a row. Evil team wins.")
                         return "Minions"
                 leader_index = (leader_index + 1) % len(self.players)
-            logging.info(f'Quests: {self.quests}')
+            self.logger.log(f'Quests: {self.quests}')
             if self.quests.count(True) >= 3:
-                logging.info("Loyal team wins.")
+                self.logger.log("Loyal team wins.")
                 return "Loyal Servants"
             elif self.quests.count(False) >= 3:
-                logging.info("Evil team wins.")
+                self.logger.log("Evil team wins.")
                 return "Minions"
 
 def play():

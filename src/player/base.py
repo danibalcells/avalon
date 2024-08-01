@@ -8,6 +8,8 @@ class BasePlayer:
     def __init__(self, name: str, game: 'Game'):
         self.name = name
         self.game = game
+        self.logger = game.logger
+        self.known_evil_players = []
 
     def __str__(self):
         return f'{self.__class__.__name__} {self.name} ({"Loyal" if self.is_loyal else "Evil"})'
@@ -28,17 +30,17 @@ class BasePlayer:
 class RandomPlayer(BasePlayer):
     def propose_team(self, num_players: int) -> List[PlayerType]:
         team = random.sample(self.game.players, num_players)
-        logging.info(f"{self} proposed team: {[str(player) for player in team]}")
+        self.logger.log(f"{self} proposed team: {[str(player) for player in team]}")
         return team
         
     def vote_on_team(self, team: List[PlayerType]) -> bool:
         vote = random.choice([True, False])
-        logging.info(f"{self} voted {'Yes' if vote else 'No'}")
+        self.logger.log(f"{self} voted {'Yes' if vote else 'No'}")
         return vote
     
     def conduct_quest(self, team: List[PlayerType]) -> bool:
         success = random.choice([True, False])
-        logging.info(f"{self} {'succeeded' if success else 'failed'} the quest")
+        self.logger.log(f"{self} {'succeeded' if success else 'failed'} the quest")
         return success
 
 
@@ -47,7 +49,7 @@ class NaivePlayer(BasePlayer):
         # Includes self in the team
         available_players = [player for player in self.game.players if player != self]
         team = [self] + random.sample(available_players, num_players - 1)
-        logging.info(f"{self} proposed team: {[str(player) for player in team]}")
+        self.logger.log(f"{self} proposed team: {[str(player) for player in team]}")
         return team
 
     def vote_on_team(self, team: List[PlayerType]) -> bool:
@@ -64,7 +66,7 @@ class NaivePlayer(BasePlayer):
                 vote = True
             else:
                 vote = False
-        logging.info(f"{self} voted {'Yes' if vote else 'No'}")
+        self.logger.log(f"{self} voted {'Yes' if vote else 'No'}")
         return vote
 
     def conduct_quest(self, team: List[PlayerType]) -> bool:
@@ -73,6 +75,6 @@ class NaivePlayer(BasePlayer):
             success = True
         else:
             success = random.choice([True, False])
-        logging.info(f"{self} {'succeeded' if success else 'failed'} the quest")
+        self.logger.log(f"{self} {'succeeded' if success else 'failed'} the quest")
         return success
 
