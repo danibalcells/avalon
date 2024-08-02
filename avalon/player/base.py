@@ -16,6 +16,7 @@ class BasePlayer:
     def assign_role(self, role: str):
         self.role = role
         self.is_loyal = role in ["Merlin", "Loyal Servant"]
+        self.is_evil = not self.is_loyal
         self.allegiance = 'Loyal' if self.is_loyal else 'Evil'
 
     def propose_team(self) -> List[PlayerType]:

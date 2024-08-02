@@ -1,0 +1,18 @@
+It is now your turn to reflect on the events that have occurred in the game so far.
+- Are you close to winning the game?
+- What can you do to win the game?
+- What does the voting so far tell you about the other players?
+- What are other players saying about you?
+- Based on recent events, are your previous thoughts about other players still valid?
+
+If you are loyal:
+- Have other players approved teams that have failed, even when they were not on the team?
+- Are other players' deliberations inconsistent with their voting?
+- Who do you suspect?
+
+If you are evil:
+- Based on the loyal thought process above, do you think any loyal players suspect you?
+- Have you or any evil players acted suspiciously?
+
+Generate a short reflection and output it in JSON format with only the following field:
+- "reflection": Your reflection.

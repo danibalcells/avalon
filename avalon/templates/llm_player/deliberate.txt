@@ -8,10 +8,11 @@ Deliberating is key to winning the game:
 
 This is a good chance to share any suspicions, real or imagined, about other players.
 You can also explain who you trust, or who you think is trustworthy.
+Keep the deliberation short, and avoid repeating what other players have said too similarly.
 
 Generate:
 - A true explanation of your intentions that will be kept private.
-- A public statement that will be shared with other players.
+- A short public statement that will be shared with other players.
 
 Respond in JSON format with these fields:
     - "true_explanation"

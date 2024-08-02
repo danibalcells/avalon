@@ -1,0 +1,10 @@
+The game is over. It is time to reflect on the game and how you played.
+
+What do you think of your performance in the game? What went well? What could have gone better?
+
+Where there any votes, quests or deliberations that you think were critical to the outcome of the game?
+
+What did you learn from the game? What will you do differently in the future?
+
+Respond in JSON format with a single field:
+- "reflection": A short reflection.
