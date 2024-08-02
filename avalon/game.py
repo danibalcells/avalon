@@ -68,6 +68,7 @@ class Game:
     def vote_on_team(self, team: List[BasePlayer]) -> bool:
         votes = [player.vote_on_team(team) for player in self.list_players()]
         result = votes.count(True) > votes.count(False)
+        self.logger.log_public(f'Team votes: {[f"{player.name}: {vote}" for player, vote in zip(self.list_players(), votes)]}')
         self.logger.log_public(f"Team {self.rejected_teams+1} vote result: {'Approved' if result else 'Rejected'}")
         for player in self.list_players():
             if player.is_bot:
@@ -81,6 +82,14 @@ class Game:
         self.logger.log_public(f'Quest votes: {votes}')
         self.logger.log_public(f"Quest {self.current_quest+1} result: {'Success' if result else 'Failure'}")
         return result
+
+    def deliberation_round(self):
+        self.logger.log_public('Deliberation round')
+        players = self.list_players()
+        random.shuffle(players)
+        for player in players:
+            if player.is_bot:
+                player.deliberate()
 
     def play_game(self) -> str:
         self.assign_roles()
@@ -101,6 +110,8 @@ class Game:
                 self.logger.log_public(f'It is {proposer}\'s turn to propose a team.')
                 team = proposer.propose_team(num_players)
                 self.logger.log_public(f"{proposer} proposed team: {[str(player) for player in team]}")
+                self.deliberation_round()
+                self.logger.log_public('We will now vote on the team.')
                 if self.vote_on_team(team):
                     if self.conduct_quest(team):
                         self.quests.append(True)
@@ -113,6 +124,7 @@ class Game:
                     if self.rejected_teams >= 5:
                         self.logger.log_public("Five teams rejected in a row. Evil team wins.")
                         return "Minions"
+                self.deliberation_round()
                 leader_index = (leader_index + 1) % len(self.players)
             self.logger.log_public(f'Quests results: {self.quests}')
             if self.quests.count(True) >= 3:

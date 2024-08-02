@@ -33,23 +33,33 @@ class LLMPlayer(BasePlayer):
             conduct_quest_prompt_str = f.read()
             self.conduct_quest_prompt_template = ChatPromptTemplate.from_template(base_prompt_str + 
                                                                                 conduct_quest_prompt_str)
+        with open(prompt_path + '/deliberate.txt') as f:
+            deliberate_prompt_str = f.read()
+            self.deliberate_prompt_template = ChatPromptTemplate.from_template(base_prompt_str + 
+                                                                                    deliberate_prompt_str)
     def create_llm_chains(self):
         self.llm = ChatOpenAI(model='gpt-4o-mini')
         self.choose_team_chain = self.choose_team_prompt_template | self.llm | JsonOutputParser()
         self.vote_team_chain = self.vote_team_prompt_template | self.llm | JsonOutputParser()
         self.conduct_quest_chain = self.conduct_quest_prompt_template | self.llm | JsonOutputParser()
+        self.deliberate_chain = self.deliberate_prompt_template | self.llm | JsonOutputParser()
 
-    def propose_team(self, num_players: int) -> List[PlayerType]:
-        response = self.choose_team_chain.invoke({
+    def invoke_chain(self, chain: ChatPromptTemplate, **kwargs):
+        return chain.invoke({
             'player_name': self.name,
             'role': self.role,
             'allegiance': self.allegiance,
             'events': format_events(self.logger.get_player_events(self)),
-            'n_players_in_quest': num_players,
-            'n_quest': self.game.current_quest + 1,
-            'attempt': self.game.rejected_teams + 1,
-            'player_names': self.game.format_player_list()
+            **kwargs
         })
+
+    def propose_team(self, num_players: int) -> List[PlayerType]:
+        response = self.invoke_chain(self.choose_team_chain,
+            n_players_in_quest=num_players,
+            n_quest=self.game.current_quest + 1,
+            attempt=self.game.rejected_teams + 1,
+            player_names=self.game.format_player_list()
+        )
         players = self.game.get_players_by_ids(response['player_ids'])
         self.logger.log_admin(f'{self.name} proposal: {[p.name for p in players]}')
         self.logger.log_admin(f'True explanation: {response["true_explanation"]}')
@@ -57,28 +67,26 @@ class LLMPlayer(BasePlayer):
         return players
 
     def vote_on_team(self, team: List[PlayerType]) -> bool:
-        response = self.vote_team_chain.invoke({
-            'player_name': self.name,
-            'role': self.role,
-            'allegiance': self.allegiance,
-            'events': format_events(self.logger.get_player_events(self)),
-            'player_names': self.game.format_player_list(team)
-        })
+        response = self.invoke_chain(self.vote_team_chain,
+            player_names=self.game.format_player_list(team)
+        )
         self.logger.log_admin(f'{self.name} vote: {"Yes" if response["vote"] else "No"}')
         self.logger.log_admin(f'True explanation: {response["true_explanation"]}')
         self.last_vote_explanation = response['public_explanation']
         return response['vote']
 
     def conduct_quest(self, team: List[PlayerType]) -> bool:
-        response = self.conduct_quest_chain.invoke({
-            'player_name': self.name,
-            'role': self.role,
-            'allegiance': self.allegiance,
-            'events': format_events(self.logger.get_player_events(self)),
-        })
+        response = self.invoke_chain(self.conduct_quest_chain,
+            player_names=self.game.format_player_list(team)
+        )
         self.logger.log_admin(f'{self.name} vote: {"Success" if response["vote"] else "Fail"}')
         self.logger.log_admin(f'True explanation: {response["true_explanation"]}')
         self.logger.log_public(f'Explanation: {response["public_explanation"]}')
         success = bool(response['vote'])
         self.logger.log_admin(f"{self} {'succeeded' if success else 'failed'} the quest")
         return success
+
+    def deliberate(self):
+        response = self.invoke_chain(self.deliberate_chain)
+        self.logger.log_admin(f'True explanation: {response["true_explanation"]}')
+        self.logger.log_public(f'{self.name} deliberation: {response["public_explanation"]}')

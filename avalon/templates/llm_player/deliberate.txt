@@ -1,0 +1,18 @@
+It is now your turn to deliberate.
+
+Deliberating is key to winning the game:
+- If you are evil, it is a chance to convince the good team that you are good.
+- If you are evil, it will also give you insights into who the loyal players suspect and what course of action they prefer.
+- If you are good, it is a chance to convince other players that you are good.
+- If you are good, it will also allow you to verify other players' intentions, and to check whether their actions are suspicious.
+
+This is a good chance to share any suspicions, real or imagined, about other players.
+You can also explain who you trust, or who you think is trustworthy.
+
+Generate:
+- A true explanation of your intentions that will be kept private.
+- A public statement that will be shared with other players.
+
+Respond in JSON format with these fields:
+    - "true_explanation"
+    - "public_explanation"
