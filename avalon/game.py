@@ -11,8 +11,8 @@ from avalon.logger import GameLogger
 
 class Game:
     def __init__(self, player_classes: List[Type[BasePlayer]]):
-        self.logger = GameLogger()
         self.num_players = 7
+        self.logger = GameLogger()
         self.players = self.create_players(player_classes)
         self.quests = []
         self.current_quest = 0
@@ -83,6 +83,12 @@ class Game:
         self.logger.log_public(f"Quest {self.current_quest+1} result: {'Success' if result else 'Failure'}")
         return result
 
+    def reflection_round(self):
+        self.logger.log_admin('Reflection round')
+        for player in self.list_players():
+            if player.is_bot:
+                player.reflect()
+
     def deliberation_round(self):
         self.logger.log_public('Deliberation round')
         players = self.list_players()
@@ -90,6 +96,12 @@ class Game:
         for player in players:
             if player.is_bot:
                 player.deliberate()
+
+    def final_reflection_round(self):
+        self.logger.log_admin('Final reflection round')
+        for player in self.list_players():
+            if player.is_bot:
+                player.final_reflection()
 
     def play_game(self) -> str:
         self.assign_roles()
@@ -110,6 +122,7 @@ class Game:
                 self.logger.log_public(f'It is {proposer}\'s turn to propose a team.')
                 team = proposer.propose_team(num_players)
                 self.logger.log_public(f"{proposer} proposed team: {[str(player) for player in team]}")
+                self.reflection_round()
                 self.deliberation_round()
                 self.logger.log_public('We will now vote on the team.')
                 if self.vote_on_team(team):
@@ -124,15 +137,18 @@ class Game:
                     if self.rejected_teams >= 5:
                         self.logger.log_public("Five teams rejected in a row. Evil team wins.")
                         return "Minions"
+                self.reflection_round()
                 self.deliberation_round()
                 leader_index = (leader_index + 1) % len(self.players)
             self.logger.log_public(f'Quests results: {self.quests}')
             if self.quests.count(True) >= 3:
                 self.logger.log_public("Loyal team wins.")
-                return "Loyal Servants"
+                winning_team = "Loyal Servants"
             elif self.quests.count(False) >= 3:
                 self.logger.log_public("Evil team wins.")
-                return "Minions"
+                winning_team = "Minions"
+        self.final_reflection_round()
+        return winning_team
 
 def play():
     player_classes = [NaivePlayer] * 7
