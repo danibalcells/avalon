@@ -69,6 +69,9 @@ class Game:
         votes = [player.vote_on_team(team) for player in self.list_players()]
         result = votes.count(True) > votes.count(False)
         self.logger.log_public(f"Team {self.rejected_teams+1} vote result: {'Approved' if result else 'Rejected'}")
+        for player in self.list_players():
+            if player.is_bot:
+                self.logger.log_public(f'{player.name} explanation: {player.last_vote_explanation}')
         return result
 
     def conduct_quest(self, team: List[BasePlayer]) -> bool:
@@ -95,6 +98,7 @@ class Game:
             while not is_team_accepted:
                 self.logger.log_public(f'Proposing team {self.rejected_teams+1}')
                 proposer = self.players[leader_index]
+                self.logger.log_public(f'It is {proposer}\'s turn to propose a team.')
                 team = proposer.propose_team(num_players)
                 self.logger.log_public(f"{proposer} proposed team: {[str(player) for player in team]}")
                 if self.vote_on_team(team):

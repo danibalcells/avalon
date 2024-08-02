@@ -5,6 +5,10 @@ from avalon.player.base import BasePlayer
 PlayerType = TypeVar('PlayerType', bound='BasePlayer')
 
 class RandomPlayer(BasePlayer):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.is_bot = False
+        
     def propose_team(self, num_players: int) -> List[PlayerType]:
         team = random.sample(self.game.list_players(), num_players)
         self.logger.log_admin(f"{self} proposed team: {[str(player) for player in team]}")
@@ -22,6 +26,10 @@ class RandomPlayer(BasePlayer):
 
 
 class NaivePlayer(BasePlayer):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.is_bot = False
+        
     def propose_team(self, num_players: int) -> List[PlayerType]:
         # Includes self in the team
         available_players = [player for player in self.game.list_players() if player != self]

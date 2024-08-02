@@ -1,7 +1,7 @@
 from typing import List, TypeVar
 import logging
 
-from langchain_openai import OpenAI
+from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
 
@@ -14,6 +14,7 @@ DEF_PROMPT_PATH = 'avalon/templates/llm_player'
 class LLMPlayer(BasePlayer):
     def __init__(self, name: str, player_id: int, game: 'Game', prompt_path: str = DEF_PROMPT_PATH):
         super().__init__(name, player_id, game)
+        self.is_bot = True
         self.load_prompts(prompt_path)
         self.create_llm_chains()
 
@@ -33,7 +34,7 @@ class LLMPlayer(BasePlayer):
             self.conduct_quest_prompt_template = ChatPromptTemplate.from_template(base_prompt_str + 
                                                                                 conduct_quest_prompt_str)
     def create_llm_chains(self):
-        self.llm = OpenAI()
+        self.llm = ChatOpenAI(model='gpt-4o-mini')
         self.choose_team_chain = self.choose_team_prompt_template | self.llm | JsonOutputParser()
         self.vote_team_chain = self.vote_team_prompt_template | self.llm | JsonOutputParser()
         self.conduct_quest_chain = self.conduct_quest_prompt_template | self.llm | JsonOutputParser()
@@ -49,9 +50,11 @@ class LLMPlayer(BasePlayer):
             'attempt': self.game.rejected_teams + 1,
             'player_names': self.game.format_player_list()
         })
+        players = self.game.get_players_by_ids(response['player_ids'])
+        self.logger.log_admin(f'{self.name} proposal: {[p.name for p in players]}')
         self.logger.log_admin(f'True explanation: {response["true_explanation"]}')
-        self.logger.log_admin(f'Public explanation: {response["public_explanation"]}')
-        return self.game.get_players_by_ids(response['player_ids'])
+        self.logger.log_public(f'Explanation: {response["public_explanation"]}')
+        return players
 
     def vote_on_team(self, team: List[PlayerType]) -> bool:
         response = self.vote_team_chain.invoke({
@@ -61,9 +64,9 @@ class LLMPlayer(BasePlayer):
             'events': format_events(self.logger.get_player_events(self)),
             'player_names': self.game.format_player_list(team)
         })
-        self.logger.log_admin(f'Vote: {response["vote"]}')
+        self.logger.log_admin(f'{self.name} vote: {"Yes" if response["vote"] else "No"}')
         self.logger.log_admin(f'True explanation: {response["true_explanation"]}')
-        self.logger.log_admin(f'Public explanation: {response["public_explanation"]}')
+        self.last_vote_explanation = response['public_explanation']
         return response['vote']
 
     def conduct_quest(self, team: List[PlayerType]) -> bool:
@@ -73,9 +76,9 @@ class LLMPlayer(BasePlayer):
             'allegiance': self.allegiance,
             'events': format_events(self.logger.get_player_events(self)),
         })
-        self.logger.log_admin(f'Vote: {response["vote"]}')
+        self.logger.log_admin(f'{self.name} vote: {"Success" if response["vote"] else "Fail"}')
         self.logger.log_admin(f'True explanation: {response["true_explanation"]}')
-        self.logger.log_admin(f'Public explanation: {response["public_explanation"]}')
+        self.logger.log_public(f'Explanation: {response["public_explanation"]}')
         success = bool(response['vote'])
         self.logger.log_admin(f"{self} {'succeeded' if success else 'failed'} the quest")
         return success
