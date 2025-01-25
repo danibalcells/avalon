@@ -110,6 +110,8 @@ class Game:
         leader_index = self.assign_first_leader()
         self.rejected_teams = 0
 
+        self.reflection_round()
+
         for quest in range(5):
             self.logger.log_public(f"Starting quest {quest+1}")
             self.current_quest = quest
