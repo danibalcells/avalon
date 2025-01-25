@@ -15,7 +15,7 @@ load_dotenv()
 PlayerType = TypeVar('PlayerType', bound='BasePlayer')
 DEF_PROMPT_PATH = 'avalon/templates/llm_player'
 DEF_PROVIDER = 'anthropic'
-DEF_MODEL = 'claude-3-5-haiku-latest'
+DEF_MODEL = 'claude-3-5-sonnet-latest'
 
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 ANTHROPIC_API_KEY = os.getenv('ANTHROPIC_API_KEY')
@@ -61,6 +61,10 @@ class LLMPlayer(BasePlayer):
             final_reflection_prompt_str = f.read()
             self.final_reflection_prompt_template = ChatPromptTemplate.from_template(base_prompt_str + 
                                                                                 final_reflection_prompt_str)
+        with open(prompt_path + '/theory_of_mind.txt') as f:
+            theory_of_mind_prompt_str = f.read()
+            self.theory_of_mind_prompt_template = ChatPromptTemplate.from_template(base_prompt_str + 
+                                                                                theory_of_mind_prompt_str)
     def create_llm_chains(self):
         if self.provider == 'openai':
             self.llm = ChatOpenAI(model=self.model, api_key=OPENAI_API_KEY)
@@ -74,6 +78,7 @@ class LLMPlayer(BasePlayer):
         self.deliberate_chain = self.deliberate_prompt_template | self.llm | JsonOutputParser()
         self.reflect_chain = self.reflect_prompt_template | self.llm | JsonOutputParser()
         self.final_reflection_chain = self.final_reflection_prompt_template | self.llm | JsonOutputParser()
+        self.theory_of_mind_chain = self.theory_of_mind_prompt_template | self.llm | JsonOutputParser()
 
     def invoke_chain(self, chain: ChatPromptTemplate, **kwargs):
         return chain.invoke({
@@ -107,9 +112,7 @@ class LLMPlayer(BasePlayer):
         return response['vote']
 
     def conduct_quest(self, team: List[PlayerType]) -> bool:
-        response = self.invoke_chain(self.conduct_quest_chain,
-            player_names=self.game.format_player_list(team)
-        )
+        response = self.invoke_chain(self.conduct_quest_chain)
         self.logger.log_admin(f'{self.name} vote: {"Success" if response["vote"] else "Fail"}')
         self.logger.log_private(f'True explanation: {response["true_explanation"]}', self)
         self.logger.log_public(f'Explanation: {response["public_explanation"]}')
@@ -123,6 +126,8 @@ class LLMPlayer(BasePlayer):
         self.logger.log_public(f'{self.name} deliberation: {response["public_explanation"]}')
 
     def reflect(self):
+        theory_of_mind_response = self.invoke_chain(self.theory_of_mind_chain)
+        self.logger.log_private(f'{self.name} predictions about other players: {theory_of_mind_response["reflection"]}', self)
         response = self.invoke_chain(self.reflect_chain)
         self.logger.log_private(f'{self.name} reflection: {response["reflection"]}', self)
 

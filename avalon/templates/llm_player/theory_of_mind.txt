@@ -1,0 +1,15 @@
+It is now your turn to think about the other players.
+
+You must make predictions about the other players' mental states based on public information available to them.
+
+For each of the other players, consider:
+- What do they think about you?
+- How have they interpreted your actions?
+- Who do they suspect?
+- What could you say or do to make them suspect you? 
+- What could you say, besides platitudes, to make them trust you?
+
+Generate your reflections based only on factual information included in the game logs, and take the limits of this information into account.
+
+Generate a short reflection (3-4 sentences) about each player and output it as a single long string in JSON format with only the following field:
+- "reflection": Your reflection.

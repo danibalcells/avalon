@@ -16,3 +16,13 @@ If you are evil:
 
 Generate a short reflection and output it in JSON format with only the following field:
 - "reflection": Your reflection.
+
+For example:
+{{
+    "reflection": "[your reflection]"
+}}
+
+Always respond in valid JSON and nothing else. If you have no information to reflect on, respond with something like:
+{{
+    "reflection": "I have no information to reflect on."
+}}

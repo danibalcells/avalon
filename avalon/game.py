@@ -7,13 +7,13 @@ import fantasynames
 from avalon.player.base import BasePlayer
 from avalon.player.baseline import NaivePlayer, RandomPlayer
 from avalon.player.llm import LLMPlayer
-from avalon.logger import GameLogger
+from avalon.logger import GameLogger, format_events
 
 
 class Game:
-    def __init__(self, player_classes: List[Type[BasePlayer]]):
+    def __init__(self, player_classes: List[Type[BasePlayer]], log_filename: str = ''):
         self.num_players = 7
-        self.logger = GameLogger()
+        self.logger = GameLogger(filename=log_filename)
         self.players = self.create_players(player_classes)
         self.quests = []
         self.current_quest = 0
@@ -156,8 +156,9 @@ class Game:
         return winning_team
 
 def play():
-    player_classes = [NaivePlayer] * 5 + [LLMPlayer] * 2
-    game = Game(player_classes)
+    player_classes = [NaivePlayer] * 6 + [LLMPlayer] * 1
+    log_filename = f'logs/game_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.txt'
+    game = Game(player_classes, log_filename)
     game.play_game()
 
 if __name__ == "__main__":

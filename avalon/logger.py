@@ -22,32 +22,39 @@ def format_events(events: List[Event]):
     return '\n'.join([e.message for e in events])
 
 class GameLogger:
-    def __init__(self):
+    def __init__(self, filename: str = ''):
         self.events: List[Event] = []
-        logging.basicConfig(
-            level=logging.INFO,
-            format='%(message)s'
-        )
+        # logging.basicConfig(
+        #     level=logging.INFO,
+        #     format='%(message)s'
+        # )
+        if filename:
+            self.write_to_file = True
+            self.filename = filename
+            with open(filename, 'w') as f:
+                f.write('')
+        else:
+            self.write_to_file = False
+
+    def log(self, message: str, visibility: EventVisibility, players: List[PlayerType]):
+        message = f'Visibility:{visibility.value}: {message}'
+        self.events.append(Event(message, visibility, players))
+        print(message)
+        if self.write_to_file:
+            with open(self.filename, 'a') as f:
+                f.write(message + '\n')
 
     def log_public(self, message: str):
-        message = f'PUBLIC MESSAGE: {message}'
-        self.events.append(Event(message, EventVisibility.PUBLIC.value, players=[]))
-        logging.info(message)
+        self.log(message, EventVisibility.PUBLIC, [])
 
     def log_evil(self, message: str):
-        message = f'EVIL ONLY MESSAGE: {message}'
-        self.events.append(Event(message, EventVisibility.EVIL.value, players=[]))
-        logging.info(message)
+        self.log(message, EventVisibility.EVIL, [])
 
     def log_private(self, message: str, player: PlayerType):
-        message = f'PRIVATE MESSAGE: {message}'
-        self.events.append(Event(message, EventVisibility.PRIVATE.value, players=[player]))
-        logging.info(message)
+        self.log(message, EventVisibility.PRIVATE, [player])
 
     def log_admin(self, message: str):
-        message = f'ADMIN MESSAGE: {message}'
-        self.events.append(Event(message, EventVisibility.ADMIN.value, players=[]))
-        logging.info(message)
+        self.log(message, EventVisibility.ADMIN, [])
 
     def get_events_filtered(self, allowed_visibilities: List[EventVisibility]) -> List[Event]:
         return [e for e in self.events if e.visibility in allowed_visibilities]
@@ -68,4 +75,4 @@ class GameLogger:
         allowed_visibilities = [EventVisibility.PUBLIC.value]
         if player.is_evil:
             allowed_visibilities.append(EventVisibility.EVIL.value)
-        return [e for e in self.events if player in e.players or e.visibility in allowed_visibilities]
+        return [e for e in self.events if player in e.players or e.visibility.value in allowed_visibilities]
