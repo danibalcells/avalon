@@ -6,6 +6,7 @@ import fantasynames
 
 from avalon.player.base import BasePlayer
 from avalon.player.baseline import NaivePlayer, RandomPlayer
+from avalon.player.llm import LLMPlayer
 from avalon.logger import GameLogger
 
 
@@ -49,7 +50,7 @@ class Game:
             player.assign_role(roles[i])
             if not player.is_loyal:
                 self.evil_players.append(player)
-            self.logger.log_admin(f"Assigned role {roles[i]} to {player}")
+            self.logger.log_admin(f'{player.name} - {player.__class__.__name__} - {player.role}')
 
     def reveal_evil_players(self):
         self.logger.log_public('All players close their eyes. Evil players open their eyes and identify their teammates. Evil players close their eyes. All players open their eyes and the game begins.')
@@ -151,7 +152,7 @@ class Game:
         return winning_team
 
 def play():
-    player_classes = [NaivePlayer] * 7
+    player_classes = [NaivePlayer] * 5 + [LLMPlayer] * 2
     game = Game(player_classes)
     game.play_game()
 

@@ -30,18 +30,22 @@ class GameLogger:
         )
 
     def log_public(self, message: str):
+        message = f'PUBLIC MESSAGE: {message}'
         self.events.append(Event(message, EventVisibility.PUBLIC.value, players=[]))
         logging.info(message)
 
     def log_evil(self, message: str):
+        message = f'EVIL ONLY MESSAGE: {message}'
         self.events.append(Event(message, EventVisibility.EVIL.value, players=[]))
         logging.info(message)
 
     def log_private(self, message: str, player: PlayerType):
+        message = f'PRIVATE MESSAGE: {message}'
         self.events.append(Event(message, EventVisibility.PRIVATE.value, players=[player]))
         logging.info(message)
 
     def log_admin(self, message: str):
+        message = f'ADMIN MESSAGE: {message}'
         self.events.append(Event(message, EventVisibility.ADMIN.value, players=[]))
         logging.info(message)
 
