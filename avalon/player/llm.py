@@ -1,20 +1,36 @@
 from typing import List, TypeVar
-import logging
+from dotenv import load_dotenv
+import os
 
 from langchain_openai import ChatOpenAI
+from langchain_anthropic import ChatAnthropic
 from langchain.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
 
 from avalon.player.base import BasePlayer
 from avalon.logger import format_events
 
+load_dotenv()
+
 PlayerType = TypeVar('PlayerType', bound='BasePlayer')
 DEF_PROMPT_PATH = 'avalon/templates/llm_player'
+DEF_PROVIDER = 'anthropic'
+DEF_MODEL = 'claude-3-5-haiku-latest'
+
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+ANTHROPIC_API_KEY = os.getenv('ANTHROPIC_API_KEY')
 
 class LLMPlayer(BasePlayer):
-    def __init__(self, name: str, player_id: int, game: 'Game', prompt_path: str = DEF_PROMPT_PATH):
+    def __init__(self, name: str,
+                 player_id: int,
+                 game: 'Game',
+                 prompt_path: str = DEF_PROMPT_PATH,
+                 provider: str = DEF_PROVIDER,
+                 model: str = DEF_MODEL):
         super().__init__(name, player_id, game)
         self.is_bot = True
+        self.provider = provider
+        self.model = model
         self.load_prompts(prompt_path)
         self.create_llm_chains()
 
@@ -46,7 +62,12 @@ class LLMPlayer(BasePlayer):
             self.final_reflection_prompt_template = ChatPromptTemplate.from_template(base_prompt_str + 
                                                                                 final_reflection_prompt_str)
     def create_llm_chains(self):
-        self.llm = ChatOpenAI(model='gpt-4o-mini')
+        if self.provider == 'openai':
+            self.llm = ChatOpenAI(model=self.model, api_key=OPENAI_API_KEY)
+        elif self.provider == 'anthropic':
+            self.llm = ChatAnthropic(model=self.model, api_key=ANTHROPIC_API_KEY)
+        else:
+            raise ValueError(f'Invalid provider: {self.provider}')
         self.choose_team_chain = self.choose_team_prompt_template | self.llm | JsonOutputParser()
         self.vote_team_chain = self.vote_team_prompt_template | self.llm | JsonOutputParser()
         self.conduct_quest_chain = self.conduct_quest_prompt_template | self.llm | JsonOutputParser()
