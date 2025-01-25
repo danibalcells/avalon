@@ -8,6 +8,7 @@ class BasePlayer:
         self.name = name
         self.game = game
         self.logger = game.logger
+        self.is_bot = False
         self.known_evil_players = []
 
     def __str__(self):
@@ -26,4 +27,7 @@ class BasePlayer:
         raise NotImplementedError
 
     def conduct_quest(self, team: List[PlayerType]) -> bool:
+        raise NotImplementedError
+
+    def post_game_init(self):
         raise NotImplementedError

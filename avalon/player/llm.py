@@ -9,6 +9,7 @@ from langchain_core.output_parsers import JsonOutputParser
 
 from avalon.player.base import BasePlayer
 from avalon.logger import format_events
+from avalon.tom import TheoryOfMind
 
 load_dotenv()
 
@@ -125,12 +126,28 @@ class LLMPlayer(BasePlayer):
         self.logger.log_private(f'True explanation: {response["true_explanation"]}', self)
         self.logger.log_public(f'{self.name} deliberation: {response["public_explanation"]}')
 
+    def update_theory_of_mind(self):
+        other_players = [p for p in self.game.list_players() if p != self]
+        new_theory_of_mind = {}
+        for player in other_players:
+            player_theory_of_mind = self.invoke_chain(
+                self.theory_of_mind_chain,
+                target_player_name=player.name,
+                previous_theory_of_mind=self.tom.format_all()
+            )
+            new_theory_of_mind[player] = player_theory_of_mind['reflection']
+        self.tom.update_all(new_theory_of_mind)
+
     def reflect(self):
-        theory_of_mind_response = self.invoke_chain(self.theory_of_mind_chain)
-        self.logger.log_private(f'{self.name} predictions about other players: {theory_of_mind_response["reflection"]}', self)
+        self.update_theory_of_mind()
+        print(self.tom.format_all())
+        print()
         response = self.invoke_chain(self.reflect_chain)
         self.logger.log_private(f'{self.name} reflection: {response["reflection"]}', self)
 
     def final_reflection(self):
         response = self.invoke_chain(self.final_reflection_chain)
         self.logger.log_private(f'{self.name} final reflection: {response["reflection"]}', self)
+
+    def post_game_init(self):
+        self.tom = TheoryOfMind(self.game.list_players())

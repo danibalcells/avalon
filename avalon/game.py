@@ -104,9 +104,15 @@ class Game:
             if player.is_bot:
                 player.final_reflection()
 
+    def post_game_init(self):
+        for player in self.list_players():
+            if player.is_bot:
+                player.post_game_init()
+
     def play_game(self) -> str:
         self.assign_roles()
         self.reveal_evil_players()
+        self.post_game_init()
         leader_index = self.assign_first_leader()
         self.rejected_teams = 0
 
