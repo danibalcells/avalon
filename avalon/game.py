@@ -147,9 +147,11 @@ class Game:
             if self.quests.count(True) >= 3:
                 self.logger.log_public("Loyal team wins.")
                 winning_team = "Loyal Servants"
+                break
             elif self.quests.count(False) >= 3:
                 self.logger.log_public("Evil team wins.")
                 winning_team = "Minions"
+                break
         self.final_reflection_round()
         return winning_team
 
