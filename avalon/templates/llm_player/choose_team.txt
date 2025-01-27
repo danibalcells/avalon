@@ -3,7 +3,16 @@ This is attempt number {attempt} out of 5 to propose a team.
 If players reject the fifth attempt to form a team for this quest, the Evil team will win the game.
 The players' IDs and names are:
 {player_names}
-Think, based on your role, of what action you can take to increase your likelihood of your team winning the game.
+
+Your current best guess about the other players is:
+{tom}
+
+Your current strategy is:
+{strategy}
+
+The above information is based on limited information and could be wrong.
+
+Think, based on your role, the above information and the game log, of what action you can take to increase your likelihood of your team winning the game.
 Respond with a JSON with these fields: 
 - "player_ids": a list with the integer IDs of the chosen players
 - "true_explanation" a string explaining why you chose this team.

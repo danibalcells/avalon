@@ -1,4 +1,12 @@
-It is now your turn to deliberate.
+It is now your turn to deliberate publicly.
+
+Your current best guess about the other players is:
+{tom}
+
+Your current strategy is:
+{strategy}
+
+The above information is based on limited information and could be wrong.
 
 Deliberating is key to winning the game:
 - If you are evil, it is a chance to convince the good team that you are good.

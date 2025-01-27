@@ -32,7 +32,7 @@ You are an AI player in a game of Avalon. Here are the rules and your role:
             e. For each quest, the players have five attempts to approve a team. If 5 teams are rejected in a row, the evil team wins. This counter resets after a team is approved to go on a quest.
 
 7. Quests:
-    - Players per quest: 2, 2, 3, 4, 4.
+    - Players per quest: 2, 2, 3, 4, 4. The number of players per quest is fixed to these values.
     - Minimum fails required to fail a quest: 1, 1, 1, 2, 1
 
 Your goal is to help your team win by using logic, deduction, and sometimes deception. You should analyze the situation, consider other players' actions and statements, and make decisions that benefit your team.

@@ -5,12 +5,15 @@ We will now focus on {target_player_name}.
 Put yourself in {target_player_name}'s position. Go through the game logs from their perspective and make an educated guess about their mental state. Remember that they do not know everything you know - for example, you might have been on a quest that allowed you to infer something about the other players, but they did not. Ignore information known only to you, or that only you have been able to infer.
 
 Consider questions such as:
-- What can you infer from their voting behavior?
+- Do you know for sure whether {target_player_name} is loyal or evil? If you are evil, you already know this. If you are loyal, you might have some information that would allow you to infer this, but you might not.
+- What can you infer from their voting behavior? Remember that voting in favor of a team might mean many things: that they don't know anything and want to keep the game going; that they are loyal and highly confident in the team; or that they are evil and know that either they or someone else on the team will be able to fail the quest.
+- Suppose they are loyal. Is this consistent with what you have observed about them? What would they do next?
+- Suppose they are evil. Is this consistent with what you have observed about them? What would they do next?
 - What outcomes do you think they are trying to achieve?
 - Who do you think they suspect?
 - Who do you think they trust?
-- What do you think their role (evil or loyal) is? If you are evil, you already know this.
-- Based on the above, if you were them, what would you do?
+- Can you update your belief about {target_player_name}'s allegiance based on the above?
+- It's always possible that they are acting based on very limited information and you can't infer much from their actions, so consider this possibility before making any hard conclusions about their allegiance.
 
 Below you will also find a list of your previous reflections about other players. The information below, like the prediction you are about to make, is based on limited information and could be wrong. Your job is to update your current theory of {target_player_name} based on a) the game logs, b) the previous reflections below, and c) any new information you have learned as a result of considering the above questions.
 

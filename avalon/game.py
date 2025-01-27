@@ -57,6 +57,7 @@ class Game:
         for player in self.evil_players:
             player.known_evil_players = self.evil_players
         self.logger.log_evil(f'The evil players are: {[f"{player.id}: {player}" for player in self.evil_players]}')
+        self.logger.log_evil(f'The loyal players are: {[f"{player.id}: {player}" for player in self.list_players() if player not in self.evil_players]}')
 
     def assign_first_leader(self) -> int:
         leader_index = random.randint(0, len(self.list_players()) - 1)
@@ -135,6 +136,8 @@ class Game:
                 self.deliberation_round()
                 self.logger.log_public('We will now vote on the team.')
                 if self.vote_on_team(team):
+                    self.reflection_round()
+                    self.deliberation_round()
                     if self.conduct_quest(team):
                         self.quests.append(True)
                     else:
@@ -162,7 +165,7 @@ class Game:
         return winning_team
 
 def play():
-    player_classes = [NaivePlayer] * 6 + [LLMPlayer] * 1
+    player_classes = [NaivePlayer] * 5 + [LLMPlayer] * 2
     log_filename = f'logs/game_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.txt'
     game = Game(player_classes, log_filename)
     game.play_game()

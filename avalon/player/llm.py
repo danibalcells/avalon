@@ -32,6 +32,7 @@ class LLMPlayer(BasePlayer):
         self.is_bot = True
         self.provider = provider
         self.model = model
+        self.strategy = 'No strategy'
         self.load_prompts(prompt_path)
         self.create_llm_chains()
 
@@ -54,10 +55,10 @@ class LLMPlayer(BasePlayer):
             deliberate_prompt_str = f.read()
             self.deliberate_prompt_template = ChatPromptTemplate.from_template(base_prompt_str + 
                                                                                     deliberate_prompt_str)
-        with open(prompt_path + '/reflect.txt') as f:
-            reflect_prompt_str = f.read()
-            self.reflect_prompt_template = ChatPromptTemplate.from_template(base_prompt_str + 
-                                                                                reflect_prompt_str)
+        with open(prompt_path + '/strategize.txt') as f:
+            strategize_prompt_str = f.read()
+            self.strategize_prompt_template = ChatPromptTemplate.from_template(base_prompt_str + 
+                                                                                strategize_prompt_str)
         with open(prompt_path + '/final_reflection.txt') as f:
             final_reflection_prompt_str = f.read()
             self.final_reflection_prompt_template = ChatPromptTemplate.from_template(base_prompt_str + 
@@ -77,7 +78,7 @@ class LLMPlayer(BasePlayer):
         self.vote_team_chain = self.vote_team_prompt_template | self.llm | JsonOutputParser()
         self.conduct_quest_chain = self.conduct_quest_prompt_template | self.llm | JsonOutputParser()
         self.deliberate_chain = self.deliberate_prompt_template | self.llm | JsonOutputParser()
-        self.reflect_chain = self.reflect_prompt_template | self.llm | JsonOutputParser()
+        self.strategize_chain = self.strategize_prompt_template | self.llm | JsonOutputParser()
         self.final_reflection_chain = self.final_reflection_prompt_template | self.llm | JsonOutputParser()
         self.theory_of_mind_chain = self.theory_of_mind_prompt_template | self.llm | JsonOutputParser()
 
@@ -91,11 +92,14 @@ class LLMPlayer(BasePlayer):
         })
 
     def propose_team(self, num_players: int) -> List[PlayerType]:
-        response = self.invoke_chain(self.choose_team_chain,
+        response = self.invoke_chain(
+            self.choose_team_chain,
             n_players_in_quest=num_players,
             n_quest=self.game.current_quest + 1,
             attempt=self.game.rejected_teams + 1,
-            player_names=self.game.format_player_list()
+            player_names=self.game.format_player_list(),
+            tom=self.tom.format_all(),
+            strategy=self.strategy
         )
         players = self.game.get_players_by_ids(response['player_ids'])
         self.logger.log_admin(f'{self.name} proposal: {[p.name for p in players]}')
@@ -104,8 +108,11 @@ class LLMPlayer(BasePlayer):
         return players
 
     def vote_on_team(self, team: List[PlayerType]) -> bool:
-        response = self.invoke_chain(self.vote_team_chain,
-            player_names=self.game.format_player_list(team)
+        response = self.invoke_chain(
+            self.vote_team_chain,
+            player_names=self.game.format_player_list(team),
+            tom=self.tom.format_all(),
+            strategy=self.strategy
         )
         self.logger.log_admin(f'{self.name} vote: {"Yes" if response["vote"] else "No"}')
         self.logger.log_private(f'True explanation: {response["true_explanation"]}', self)
@@ -113,7 +120,12 @@ class LLMPlayer(BasePlayer):
         return response['vote']
 
     def conduct_quest(self, team: List[PlayerType]) -> bool:
-        response = self.invoke_chain(self.conduct_quest_chain)
+        response = self.invoke_chain(
+            self.conduct_quest_chain,
+            player_names=self.game.format_player_list(team),
+            tom=self.tom.format_all(),
+            strategy=self.strategy
+        )
         self.logger.log_admin(f'{self.name} vote: {"Success" if response["vote"] else "Fail"}')
         self.logger.log_private(f'True explanation: {response["true_explanation"]}', self)
         self.logger.log_public(f'Explanation: {response["public_explanation"]}')
@@ -122,7 +134,11 @@ class LLMPlayer(BasePlayer):
         return success
 
     def deliberate(self):
-        response = self.invoke_chain(self.deliberate_chain)
+        response = self.invoke_chain(
+            self.deliberate_chain,
+            tom=self.tom.format_all(),
+            strategy=self.strategy
+        )
         self.logger.log_private(f'True explanation: {response["true_explanation"]}', self)
         self.logger.log_public(f'{self.name} deliberation: {response["public_explanation"]}')
 
@@ -133,17 +149,24 @@ class LLMPlayer(BasePlayer):
             player_theory_of_mind = self.invoke_chain(
                 self.theory_of_mind_chain,
                 target_player_name=player.name,
-                previous_theory_of_mind=self.tom.format_all()
+                previous_theory_of_mind=self.tom.format_all(),
             )
             new_theory_of_mind[player] = player_theory_of_mind['reflection']
         self.tom.update_all(new_theory_of_mind)
+        print(f'{self.name} theory of mind: {self.tom.format_all()}')
+
+    def update_strategy(self):
+        response = self.invoke_chain(
+            self.strategize_chain,
+            tom=self.tom.format_all(),
+            previous_strategy=self.strategy
+        )
+        self.strategy = response['strategy']
+        self.logger.log_private(f'My current strategy: {self.strategy}', self)
 
     def reflect(self):
         self.update_theory_of_mind()
-        print(self.tom.format_all())
-        print()
-        response = self.invoke_chain(self.reflect_chain)
-        self.logger.log_private(f'{self.name} reflection: {response["reflection"]}', self)
+        self.update_strategy()
 
     def final_reflection(self):
         response = self.invoke_chain(self.final_reflection_chain)
